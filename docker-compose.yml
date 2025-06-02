@@ -1,0 +1,46 @@
+services:
+
+  postgres-products-db:
+    image: postgres:15
+    container_name: postgres-products-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: products_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - pickhealthy-net
+
+  products-ms:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_HOST=postgres-products-db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_NAME=products_db
+    depends_on:
+      - postgres-products-db
+    networks:
+      - pickhealthy-net
+
+volumes:
+  postgres_data:
+
+networks:
+  pickhealthy-net:
+    external: true
+
+# Para reiniciar el volumen de postgres
+# docker-compose down
+# docker volume rm products-ms_postgres_data
+# docker-compose up --build
